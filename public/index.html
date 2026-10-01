@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASHBOARD STARLINK</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        
+        .header { font-weight: bold; font-size: 18px; margin-bottom: 15px; color: #1e293b; letter-spacing: 0.5px; }
+        
+        /* 4 Stat Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #fff; border-radius: 6px; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e2e8f0; }
+        .stat-card.blue { border-top: 4px solid #2563eb; }
+        .stat-card.green { border-top: 4px solid #10b981; }
+        .stat-card.red { border-top: 4px solid #ef4444; }
+        .stat-card.dark-blue { border-top: 4px solid #1e3a8a; }
+        
+        .stat-title { font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #0f172a; }
+        .stat-icon { width: 42px; height: 42px; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+        .bg-blue { background: #1e293b; }
+        .bg-green { background: #10b981; }
+        .bg-red { background: #ef4444; }
+        .bg-dark-blue { background: #000000; }
+
+        /* Row Charts & Maps */
+        .charts-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .chart-box { background: #fff; border-radius: 6px; padding: 15px; border: 1px solid #e2e8f0; text-align: center; height: 280px; }
+        .chart-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 10px; }
+        .chart-container { position: relative; height: 210px; width: 100%; display: flex; justify-content: center; }
+
+        /* Map Frame */
+        #map { width: 100%; height: 210px; border-radius: 4px; background: #e2e8f0; }
+
+        /* Table Section */
+        .table-container { background: #fff; border-radius: 6px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-toolbar { padding: 10px 15px; display: flex; justify-content: space-between; background: #fff; border-bottom: 1px solid #e2e8f0; }
+        .search-input { padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width: 200px; outline: none; }
+        .download-btn { background: #fff; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .download-btn:hover { background: #f8fafc; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+        th { background: #111827; color: #fff; padding: 10px 12px; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 10px; display: inline-block; }
+        .badge-active { background: #dbeafe; color: #1d4ed8; }
+        .badge-online { background: #d1fae5; color: #047857; }
+        .badge-offline { background: #ffe4e6; color: #be123c; }
+    </style>
+</head>
+<body>
+
+    <div class="header">DASHBOARD STARLINK</div>
+
+    <!-- 4 KARTU RINGKASAN -->
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <div>
+                <div class="stat-title">TOTAL UNIT</div>
+                <div class="stat-value" id="totalUnit">0</div>
+            </div>
+            <div class="stat-icon bg-blue"><i class="fa-solid fa-satellite-dish"></i></div>
+        </div>
+        <div class="stat-card green">
+            <div>
+                <div class="stat-title">TOTAL ONLINE</div>
+                <div class="stat-value" id="totalOnline">0</div>
+            </div>
+            <div class="stat-icon bg-green"><i class="fa-solid fa-circle-up"></i></div>
+        </div>
+        <div class="stat-card red">
+            <div>
+                <div class="stat-title">TOTAL OFFLINE</div>
+                <div class="stat-value" id="totalOffline">0</div>
+            </div>
+            <div class="stat-icon bg-red"><i class="fa-solid fa-circle-exclamation"></i></div>
+        </div>
+        <div class="stat-card dark-blue">
+            <div>
+                <div class="stat-title">TOTAL ACTIVE SERVICE</div>
+                <div class="stat-value" id="totalActiveService">0</div>
+            </div>
+            <div class="stat-icon bg-dark-blue"><i class="fa-solid fa-check"></i></div>
+        </div>
+    </div>
+
+    <!-- 3 PIE CHART & MAP -->
+    <div class="charts-grid">
+        <div class="chart-box">
+            <div class="chart-title">Device Status</div>
+            <div class="chart-container"><canvas id="deviceStatusChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title">Service Status</div>
+            <div class="chart-container"><canvas id="serviceStatusChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title">Data Usage</div>
+            <div class="chart-container"><canvas id="dataUsageChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title" style="text-align: left; font-size: 12px; color: #64748b;">Lokasi Perangkat</div>
+            <iframe id="map" src="https://maps.google.com/maps?q=-2.548926,118.014863&z=5&output=embed" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <!-- TABEL DATA PERANGKAT -->
+    <div class="table-container">
+        <div class="table-toolbar">
+            <input type="text" class="search-input" placeholder="🔍 Search...">
+            <button class="download-btn"><i class="fa-solid fa-download"></i> Download</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>NO</th>
+                    <th>NICKNAME</th>
+                    <th>KIT</th>
+                    <th>SERVICE</th>
+                    <th>DEVICE</th>
+                    <th>KUOTA LOKAL</th>
+                    <th>KUOTA LAINNYA</th>
+                    <th>TOTAL KUOTA</th>
+                    <th>PERIODE</th>
+                </tr>
+            </thead>
+            <tbody id="deviceTableBody">
+                <!-- Data diisi otomatis oleh JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let deviceChart, serviceChart, usageChart;
+        let allDevices = [];
+
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard');
+                const data = await response.json();
+                allDevices = data.devices;
+
+                // Update Stat Cards
+                document.getElementById('totalUnit').innerText = data.stats.totalUnit;
+                document.getElementById('totalOnline').innerText = data.stats.totalOnline;
+                document.getElementById('totalOffline').innerText = data.stats.totalOffline;
+                document.getElementById('totalActiveService').innerText = data.stats.totalActiveService;
+
+                // Render Charts & Table
+                renderCharts(data.devices, data.stats);
+                renderTable(data.devices);
+            } catch (err) {
+                console.error("Gagal memuat data dashboard:", err);
+            }
+        }
+
+        function renderCharts(devices, stats) {
+            // 1. Device Status Chart
+            const deviceCtx = document.getElementById('deviceStatusChart').getContext('2d');
+            if(deviceChart) deviceChart.destroy();
+            deviceChart = new Chart(deviceCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Online', 'Offline'],
+                    datasets: [{ data: [stats.totalOnline, stats.totalOffline], backgroundColor: ['#22c55e', '#84cc16'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 2. Service Status Chart
+            const serviceCtx = document.getElementById('serviceStatusChart').getContext('2d');
+            if(serviceChart) serviceChart.destroy();
+            serviceChart = new Chart(serviceCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Active', 'Suspended', 'Dismantled'],
+                    datasets: [{ data: [stats.totalActiveService, 0, 0], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 3. Data Usage Chart
+            const usageCtx = document.getElementById('dataUsageChart').getContext('2d');
+            if(usageChart) usageChart.destroy();
+            usageChart = new Chart(usageCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['<75%', '75-100%', '>=100%'],
+                    datasets: [{ data: [7, 1, 7], backgroundColor: ['#3b82f6', '#84cc16', '#475569'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function renderTable(devices) {
+            const tbody = document.getElementById('deviceTableBody');
+            tbody.innerHTML = '';
+
+            devices.forEach((item, index) => {
+                const startDate = item.periode_start ? item.periode_start.split('T')[0] : '-';
+                const endDate = item.periode_end ? item.periode_end.split('T')[0] : '-';
+                
+                const kuotaLokal = Number(item.kuota_lokal || 0).toFixed(2);
+                const kuotaLainnya = Number(item.kuota_lainnya || 0).toFixed(2);
+                const totalKuota = Number(item.total_kuota || 0).toFixed(2);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><b>${item.nickname}</b></td>
+                    <td>${item.kit_number}</td>
+                    <td><span class="badge badge-active">${item.service_status}</span></td>
+                    <td><span class="badge ${item.device_status === 'ONLINE' ? 'badge-online' : 'badge-offline'}">• ${item.device_status}</span></td>
+                    <td>${kuotaLokal} GB</td>
+                    <td>${kuotaLainnya} GB</td>
+                    <td><b>${totalKuota} GB</b></td>
+                    <td>${startDate} s/d ${endDate}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Fitur Filter Search Table
+        document.querySelector('.search-input').addEventListener('input', (e) => {
+            const keyword = e.target.value.toLowerCase();
+            const filtered = allDevices.filter(d => 
+                d.nickname.toLowerCase().includes(keyword) || 
+                d.kit_number.toLowerCase().includes(keyword) ||
+                d.device_status.toLowerCase().includes(keyword)
+            );
+            renderTable(filtered);
+        });
+
+        // Fitur Download CSV Table
+        document.querySelector('.download-btn').addEventListener('click', () => {
+            let csv = 'NO,NICKNAME,KIT,SERVICE,DEVICE,KUOTA LOKAL,KUOTA LAINNYA,TOTAL KUOTA,PERIODE\n';
+            allDevices.forEach((d, i) => {
+                const startDate = d.periode_start ? d.periode_start.split('T')[0] : '';
+                const endDate = d.periode_end ? d.periode_end.split('T')[0] : '';
+                csv += `${i+1},"${d.nickname}","${d.kit_number}",${d.service_status},${d.device_status},${d.kuota_lokal},${d.kuota_lainnya},${d.total_kuota},"${startDate} s/d ${endDate}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Starlink_Devices_Report.csv';
+            a.click();
+        });
+
+        fetchDashboardData();
+    </script>
+</body>
+</html>
